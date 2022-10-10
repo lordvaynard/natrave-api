@@ -15,15 +15,47 @@ export const create = async (ctx) => {
     }
 
     try{
-        const { password, ...user } = await prisma.user.create({data})
+        const { password, ...user } = await prisma.user.create({data}) //Criando usuario no banco
         ctx.body = user
         ctx.status = 201
-    } catch (error){
+
+    } catch (error){ //se erro na criação, log e mensagem 502
         console.log(error)
         ctx.body = error
-        ctx.status = 501
+        ctx.status = 502
     }
 
+    const [type, token] = ctx.headers.authorization.split(" ")//tratando a senha do usuario
+    const decodedToken = atob(token)
+    const [email, passwordTextPlain] = decodedToken.split(":")
+
+    const user = await prisma.user.findUnique({ //Verificando seu usuario existe 
+        where: {email}
+    })
+
+    if (!user) {
+        ctx.status = 404
+        return
+    }
+
+    const passwordMatch = await bcrypt.compare(passwordTextPlain, user.password) //Comparando a senha
+
+    if (!passwordMatch) {
+        ctx.status = 404
+        return
+    }
+
+    const accessToken = jwt.sign({
+        sub: ctx.body.id,
+        name: ctx.body.name,
+        expiresIn: "7d"
+    }, process.env.JWT_SECRET)
+
+    ctx.body = {
+        user,
+        accessToken
+    }
+    console.log(ctx.body)
 }
 
 export const login = async ctx => {
