@@ -1,8 +1,8 @@
 import Router from '@koa/router'
 
-import  * as users  from './app/users/index.js'
-import  * as tips  from './app/tips/index.js'
-import  * as games  from './app/games/index.js'
+import  * as users  from './users/index.js'
+import  * as tips  from './tips/index.js'
+import  * as games  from './games/index.js'
 
 export const router = new Router()
 
